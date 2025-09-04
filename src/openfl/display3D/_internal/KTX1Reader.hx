@@ -7,6 +7,7 @@ import openfl.utils.ByteArray;
 
 /**
  * Supports common compressed formats: DXT1/5, ETC1/2, PVRTC4.
+ * Supports multiple mipmap levels and cube maps.
  */
 class KTX1Reader {
 	public var width:Int;
@@ -18,6 +19,7 @@ class KTX1Reader {
 
 	private var mipmapData:Array<{
 		level:Int,
+		face:Int,
 		width:Int,
 		height:Int,
 		size:Int,
@@ -55,8 +57,11 @@ class KTX1Reader {
 		mipCount = data.readUnsignedInt();
 		var keyValueDataBytes = data.readUnsignedInt();
 
-		if (depth > 0 || arrayElements > 0 || faces > 1)
-			throw new IllegalOperationError("KTX1 only supports 2D, non-array, non-cubemap textures");
+		if (depth > 0 || arrayElements > 0)
+			throw new IllegalOperationError("KTX1 only supports 2D, non-array textures");
+
+		if (faces != 1 && faces != 6)
+			throw new IllegalOperationError("KTX1 only supports 2D and cubemap textures (faces must be 1 or 6)");
 
 		data.position += keyValueDataBytes;
 
@@ -80,33 +85,36 @@ class KTX1Reader {
 
 		format = GLCompressedTextureFormat.toString(glInternalFormat);
 
-		// Parse all mipmap levels
+		// Parse all mipmap levels and faces
 		mipmapData = [];
 		var levelWidth = width;
 		var levelHeight = height;
 		for (level in 0...mipCount) {
-			// Each mip level starts with imageSize, then image data, then 4-byte alignment
-			if (data.position + 4 > data.length)
-				throw new IllegalOperationError('KTX1: Unexpected EOF reading mipmap imageSize');
-			var imageSize = data.readUnsignedInt();
+			for (face in 0...faces) {
+				// Each mip+face starts with imageSize, then image data, then 4-byte alignment
+				if (data.position + 4 > data.length)
+					throw new IllegalOperationError('KTX1: Unexpected EOF reading mipmap imageSize');
+				var imageSize = data.readUnsignedInt();
 
-			if (data.position + imageSize > data.length)
-				throw new IllegalOperationError('KTX1: Unexpected EOF reading mipmap imageData');
+				if (data.position + imageSize > data.length)
+					throw new IllegalOperationError('KTX1: Unexpected EOF reading mipmap imageData');
 
-			var imageBytes = Bytes.alloc(imageSize);
-			data.readBytes(imageBytes, 0, imageSize);
+				var imageBytes = Bytes.alloc(imageSize);
+				data.readBytes(imageBytes, 0, imageSize);
 
-			mipmapData.push({
-				level: level,
-				width: levelWidth,
-				height: levelHeight,
-				size: imageSize,
-				bytes: imageBytes
-			});
+				mipmapData.push({
+					level: level,
+					face: face,
+					width: levelWidth,
+					height: levelHeight,
+					size: imageSize,
+					bytes: imageBytes
+				});
 
-			// Advance to next 4-byte boundary (padding, per KTX spec)
-			var pad = (4 - (imageSize % 4)) % 4;
-			data.position += pad;
+				// Advance to next 4-byte boundary (padding, per KTX spec)
+				var pad = (4 - (imageSize % 4)) % 4;
+				data.position += pad;
+			}
 
 			// Next level dimensions (minimum 1)
 			levelWidth = Std.int(Math.max(1, levelWidth >> 1));
@@ -115,15 +123,13 @@ class KTX1Reader {
 	}
 
 	/**
-	 * Calls uploadCallback for each mip level.
-	 * uploadCallback(target, level, gpuFormat, width, height, dataLen, Bytes)
+	 * Calls uploadCallback for each mip level and face.
+	 * uploadCallback(face, level, gpuFormat, width, height, dataLen, Bytes)
 	 */
 	public function readTextures(uploadCallback:UInt->Int->Int->Int->Int->Int->Bytes->Void):Void {
 		for (mipmap in mipmapData) {
-			uploadCallback(0, // target (no cubemap)
-				mipmap.level, cast(glInternalFormat, Int), // gpuFormat
-				mipmap.width, mipmap.height, mipmap.size,
-				mipmap.bytes);
+			uploadCallback(mipmap.face, mipmap.level, cast(glInternalFormat, Int), // gpuFormat
+				mipmap.width, mipmap.height, mipmap.size, mipmap.bytes);
 		}
 	}
 }
