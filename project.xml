@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<project>
+    <!-- metadata, make sure 'package' is at least 3 segments (ie. com.mycompany.myproject) -->
+    <meta title="ktx1loader" package="" version="1.0.0" company="B-Interactive" />
+    
+    <!-- output -->
+    <app main="Main" file="ktx1loader" path="bin" />
+    
+    <window background="#000000" fps="60" />
+    <window width="3000" height="1920" unless="mobile" />
+    <window orientation="landscape" vsync="false" antialiasing="0" if="cpp" />
+    <window resizable="true" />
+    
+    <!-- classpath, haxe libs -->
+    <source path="src" />
+    <haxelib name="lime" />
+    <haxelib name="openfl" />
+    <haxelib name="starling" />
+
+    <!-- assets -->
+    <!-- png reference -->
+    <assets path="assets/img" include="*.png" type="image" />
+    <assets path="assets/img" include="*.xml" type="text" />
+    
+    <!-- atf -->
+    <assets path="assets/atf" include="*.atf" type="binary" />
+    <assets path="assets/atf" include="*.xml" type="text" />
+
+    <!-- ktx -->
+    <assets path="assets/ktx" include="*.ktx" type="binary" />
+    <assets path="assets/ktx" include="*.xml" type="text" />    
+</project>
