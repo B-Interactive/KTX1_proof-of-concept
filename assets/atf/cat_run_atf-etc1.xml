@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with TexturePacker https://www.codeandweb.com/texturepacker -->
+<!-- $TexturePacker:SmartUpdate:15017bcbfd231339c8847d5ba0598b1b:3ac44d26e1b98cbba9f3bf1faba30434:f3485525fac8f4280c62e248ec58a4a9$ -->
+<TextureAtlas imagePath="cat_run_atf-etc1.atf_atf-etc1.atf" width="1024" height="2048">
+    <SubTexture name="cat_run_atf-etc1.atf_01" x="1" y="349" width="465" height="386" frameX="-20" frameY="-63" frameWidth="512" frameHeight="512"/>
+    <SubTexture name="cat_run_atf-etc1.atf_02" x="1" y="1" width="479" height="346" frameX="-5" frameY="-103" frameWidth="512" frameHeight="512"/>
+    <SubTexture name="cat_run_atf-etc1.atf_03" x="1" y="737" width="448" height="352" frameX="-54" frameY="-97" frameWidth="512" frameHeight="512"/>
+    <SubTexture name="cat_run_atf-etc1.atf_04" x="468" y="707" width="452" height="336" frameX="-45" frameY="-113" frameWidth="512" frameHeight="512"/>
+    <SubTexture name="cat_run_atf-etc1.atf_05" x="468" y="358" width="460" height="347" frameX="-43" frameY="-102" frameWidth="512" frameHeight="512"/>
+    <SubTexture name="cat_run_atf-etc1.atf_06" x="482" y="1" width="472" height="355" frameX="-35" frameY="-94" frameWidth="512" frameHeight="512"/>
+</TextureAtlas>
