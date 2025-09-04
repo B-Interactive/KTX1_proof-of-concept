@@ -12,13 +12,19 @@ class KTX1Reader {
 	public var width:Int;
 	public var height:Int;
 	public var mipCount:Int;
-	public var data:ByteArray;
 	public var format:String;
 	public var glInternalFormat:GLCompressedTextureFormat;
 	public var glBaseInternalFormat:Int;
 
+	private var mipmapData:Array<{
+		level:Int,
+		width:Int,
+		height:Int,
+		size:Int,
+		bytes:Bytes
+	}>;
+
 	public function new(data:ByteArray, byteArrayOffset:UInt = 0) {
-		this.data = data;
 		data.position = byteArrayOffset;
 
 		// Check KTX1 magic number
@@ -54,11 +60,6 @@ class KTX1Reader {
 
 		data.position += keyValueDataBytes;
 
-		// Read image data for mip 0 (Proof of concept: only first mip)
-		var imageSize = data.readUnsignedInt();
-		var imageDataOffset = data.position;
-		var imageDataLength = imageSize;
-
 		// Supported formats (reference GLCompressedTextureFormat)
 		var supportedFormats = [
 			GLCompressedTextureFormat.COMPRESSED_RGB_S3TC_DXT1_EXT,
@@ -77,49 +78,52 @@ class KTX1Reader {
 				+ ")");
 		}
 
-		// Use GLCompressedTextureFormat helper for format string
 		format = GLCompressedTextureFormat.toString(glInternalFormat);
 
-		// Extract mipmap bytes
-		var mipmapBytes = new ByteArray();
-		data.readBytes(mipmapBytes, 0, imageDataLength);
-		this.data = mipmapBytes;
+		// Parse all mipmap levels
+		mipmapData = [];
+		var levelWidth = width;
+		var levelHeight = height;
+		for (level in 0...mipCount) {
+			// Each mip level starts with imageSize, then image data, then 4-byte alignment
+			if (data.position + 4 > data.length)
+				throw new IllegalOperationError('KTX1: Unexpected EOF reading mipmap imageSize');
+			var imageSize = data.readUnsignedInt();
+
+			if (data.position + imageSize > data.length)
+				throw new IllegalOperationError('KTX1: Unexpected EOF reading mipmap imageData');
+
+			var imageBytes = Bytes.alloc(imageSize);
+			data.readBytes(imageBytes, 0, imageSize);
+
+			mipmapData.push({
+				level: level,
+				width: levelWidth,
+				height: levelHeight,
+				size: imageSize,
+				bytes: imageBytes
+			});
+
+			// Advance to next 4-byte boundary (padding, per KTX spec)
+			var pad = (4 - (imageSize % 4)) % 4;
+			data.position += pad;
+
+			// Next level dimensions (minimum 1)
+			levelWidth = Std.int(Math.max(1, levelWidth >> 1));
+			levelHeight = Std.int(Math.max(1, levelHeight >> 1));
+		}
 	}
 
 	/**
-	 * Only calls callback for single mip level.
+	 * Calls uploadCallback for each mip level.
+	 * uploadCallback(target, level, gpuFormat, width, height, dataLen, Bytes)
 	 */
 	public function readTextures(uploadCallback:UInt->Int->Int->Int->Int->Int->Bytes->Void):Void {
-		// Use helper for block size
-		var blockBytes = GLCompressedTextureFormat.blockBytes(glInternalFormat);
-
-		// Special case for PVRTC4: total image size = ceil(width * height / 2)
-		var expectedBlockSize = switch (glInternalFormat) {
-			case GLCompressedTextureFormat.COMPRESSED_RGB_PVRTC_4BPPV1_IMG, GLCompressedTextureFormat.COMPRESSED_RGBA_PVRTC_4BPPV1_IMG:
-				Math.ceil(width * height / 2);
-			default:
-				((width + 3) >> 2) * ((height + 3) >> 2) * blockBytes;
-		};
-
-		if (data.length != expectedBlockSize) {
-			trace("ERROR: KTX1 " + format + " data length mismatch: got " + data.length + ", expected " + expectedBlockSize);
-			// Optionally: fallback or throw
+		for (mipmap in mipmapData) {
+			uploadCallback(0, // target (no cubemap)
+				mipmap.level, cast(glInternalFormat, Int), // gpuFormat
+				mipmap.width, mipmap.height, mipmap.size,
+				mipmap.bytes);
 		}
-
-		#if (js || html5)
-		// Check for S3TC extension (WebGL)
-		var canvas:js.html.CanvasElement = js.Browser.document.createCanvasElement();
-		var gl = canvas.getContext('webgl');
-		var ext = gl.getExtension('WEBGL_compressed_texture_s3tc');
-		if (ext == null) {
-			trace("ERROR: S3TC/DXT5 not supported in this browser!");
-			// Optionally fallback
-		}
-		#end
-
-		uploadCallback(0, // target (no cubemap)
-			0, // level
-			cast(glInternalFormat, Int), // gpuFormat
-			width, height, data.length, Bytes.ofData(data));
 	}
 }
