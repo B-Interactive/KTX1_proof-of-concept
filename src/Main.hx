@@ -13,6 +13,7 @@ import starling.text.TextField;
 import starling.text.TextFieldAutoSize;
 import starling.textures.Texture;
 import starling.textures.TextureAtlas;
+import starling.textures.TextureOptions;
 import starling.utils.AssetManager;
 import starling.utils.Color;
 #if sys
@@ -45,8 +46,8 @@ class Main extends OpenFLSprite {
 			starling.viewPort.width = stage.stageWidth;
 			starling.viewPort.height = stage.stageHeight;
 			starling.stage.stageWidth = stage.stageWidth;
-			starling.stage.stageHeight = stage.stageHeight;			
-			var starlingRoot:StarlingRoot = cast (starling.root, StarlingRoot);
+			starling.stage.stageHeight = stage.stageHeight;
+			var starlingRoot:StarlingRoot = cast(starling.root, StarlingRoot);
 			if (starlingRoot != null)
 				starlingRoot.layoutGrid();
 			// Optionally, force Starling to redraw
@@ -92,8 +93,8 @@ class StarlingRoot extends Sprite {
 			addChild(sprite);
 
 			var movieClip:MovieClip = new MovieClip(assetManager.getTextures(animations[i]));
-			// movieClip.scale = 0.7;
 			sprite.addChild(movieClip);
+			trace(animations[i] + " mipmaps : " + movieClip.texture.mipMapping);
 			Starling.current.juggler.add(movieClip);
 
 			// Text with format/codec details
@@ -112,27 +113,30 @@ class StarlingRoot extends Sprite {
 	}
 
 	public function layoutGrid(e:Event = null):Void {
-		if (anims == null || anims.length == 0) return;
+		if (anims == null || anims.length == 0)
+			return;
 
-        // Calculate cell size (use first anim as basis, or find max dimensions)
-        var cellWidth = 0;
-        var cellHeight = 0;
-        for (sprite in anims) {
-            cellWidth = Std.int(Math.max(cellWidth, sprite.width));
-            cellHeight = Std.int(Math.max(cellHeight, sprite.height));
-        }
-        if (cellWidth == 0 || cellHeight == 0) return;
+		// Calculate cell size (use first anim as basis, or find max dimensions)
+		var cellWidth = 0;
+		var cellHeight = 0;
+		for (sprite in anims) {
+			cellWidth = Std.int(Math.max(cellWidth, sprite.width));
+			cellHeight = Std.int(Math.max(cellHeight, sprite.height));
+		}
+		if (cellWidth == 0 || cellHeight == 0)
+			return;
 
-        var xnum = Math.floor(stage.stageWidth / cellWidth);
-        if (xnum <= 0) xnum = 1; // Avoid div by zero
+		var xnum = Math.floor(stage.stageWidth / cellWidth);
+		if (xnum <= 0)
+			xnum = 1; // Avoid div by zero
 
-        for (i in 0...anims.length) {
-            var col = i % xnum;
-            var row = Math.floor(i / xnum);
-            var sprite = anims[i];
-            sprite.x = cellWidth * col;
-            sprite.y = cellHeight * row;
-        }
+		for (i in 0...anims.length) {
+			var col = i % xnum;
+			var row = Math.floor(i / xnum);
+			var sprite = anims[i];
+			sprite.x = cellWidth * col;
+			sprite.y = cellHeight * row;
+		}
 	}
 
 	#if sys
@@ -159,8 +163,10 @@ class StarlingRoot extends Sprite {
 				var xmlPath = path + xmlMap.get(base);
 				trace(texPath);
 				trace(xmlPath);
+				var textureOptions:TextureOptions = new TextureOptions(1, true); // Enable mipmaps
 				if (textureExtension != ".png") {
-					assetManager.addTextureAtlas(texPath, new TextureAtlas(Texture.fromData(Assets.getBytes(texPath)), Xml.parse(Assets.getText(xmlPath))));
+					assetManager.addTextureAtlas(texPath,
+						new TextureAtlas(Texture.fromData(Assets.getBytes(texPath), textureOptions), Xml.parse(Assets.getText(xmlPath))));
 				} else {
 					assetManager.addTextureAtlas(texPath,
 						new TextureAtlas(Texture.fromBitmapData(Assets.getBitmapData(texPath)), Xml.parse(Assets.getText(xmlPath))));
