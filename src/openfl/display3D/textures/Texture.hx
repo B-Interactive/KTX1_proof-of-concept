@@ -325,18 +325,24 @@ import openfl.utils.ByteArray;
 
 			__context.__bindGLTexture2D(__textureID);
 
-			var atfGPUFormat = reader.atfGPUFormat;
-			// Only accept if runtime supports KTX's format
-			var runtimeFormat = reader.format == "PVRTC"
-				|| reader.format == "DXT"
-				|| reader.format == "ETC1"
-				|| reader.format == "ETC2" ? (reader.hasAlpha ? TextureBase.__compressedFormatsAlpha[atfGPUFormat] : TextureBase.__compressedFormats[atfGPUFormat]) : 0;
+			// Pull the ATFGPUFormat from reader
+			var gpuFormat = reader.atfGPUFormat;
 
-			if (runtimeFormat == null || runtimeFormat == 0) return; // Returns if contained texture format unsupported.
+			// Lookup the compressed format code for this runtime (GL constant)
+			var format = 0;
+			if (gpuFormat != null) {
+				// Choose the correct lookup table based on alpha
+				var formats = reader.hasAlpha
+					? TextureBase.__compressedFormatsAlpha
+					: TextureBase.__compressedFormats;
+				format = formats[gpuFormat];
+			}
+
+			if (format == 0) return; // Bail if unsupported texture format
 
 			reader.readTextures(function(target, level, gpuFormat, width, height, blockLength, bytes:Bytes)
 			{
-				gl.compressedTexImage2D(gl.TEXTURE_2D, level, runtimeFormat, width, height, 0,
+				gl.compressedTexImage2D(gl.TEXTURE_2D, level, format, width, height, 0,
 					new UInt8Array(#if js @:privateAccess bytes.b.buffer #else bytes #end, 0, blockLength));
 			});
 
