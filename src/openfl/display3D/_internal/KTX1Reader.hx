@@ -5,8 +5,6 @@ import openfl.display3D._internal.ATFGPUFormat;
 import openfl.errors.IllegalOperationError;
 import openfl.utils.ByteArray;
 
-typedef UploadCallback = UInt->Int->ATFGPUFormat->Int->Int->Int->Bytes->Void;
-
 /**
 	This class can read textures from Khronos TeXture v1 format containers.
 	You can create such files via tools such as Compressonator:
@@ -28,7 +26,7 @@ class KTX1Reader
 	public var format:String;
 	public var glInternalFormat:Int;
 	public var glBaseInternalFormat:Int;
-	public var atfGPUFormat:ATFGPUFormat;
+	public var atfGPUFormat:Null<ATFGPUFormat>;
 	public var hasAlpha:Bool;
 
 	private var mipmapData:Array<
@@ -133,7 +131,7 @@ class KTX1Reader
 		}
 	}
 
-	static function ktxGLFormatToATFGPUFormat(glInternal:Int):ATFGPUFormat
+	static function ktxGLFormatToATFGPUFormat(glInternal:Int):Null<ATFGPUFormat>
 	{
 		// S3TC
 		if (glInternal == 0x83F0 || glInternal == 0x83F1 || glInternal == 0x83F3) return ATFGPUFormat.DXT;
@@ -150,7 +148,7 @@ class KTX1Reader
 	 * Calls uploadCallback for each mip level and face.
 	 * uploadCallback(face, level, atfGPUFormat, width, height, dataLen, Bytes)
 	 */
-	public function readTextures(uploadCallback:UploadCallback):Void
+	public function readTextures(uploadCallback:UInt->Int->ATFGPUFormat->Int->Int->Int->Bytes->Void):Void
 	{
 		for (mipmap in mipmapData)
 		{
