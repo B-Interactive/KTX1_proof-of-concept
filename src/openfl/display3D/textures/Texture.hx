@@ -332,11 +332,7 @@ import openfl.utils.ByteArray;
 				|| reader.format == "ETC1"
 				|| reader.format == "ETC2" ? (reader.hasAlpha ? TextureBase.__compressedFormatsAlpha[atfGPUFormat] : TextureBase.__compressedFormats[atfGPUFormat]) : 0;
 
-			if (runtimeFormat == null || runtimeFormat == 0)
-			{
-				__context.__bindGLTexture2D(null);
-				throw new IllegalOperationError("KTX internal format not supported by this runtime/context: " + reader.format);
-			}
+			if (runtimeFormat == null || runtimeFormat == 0) return; // Returns if contained texture format unsupported.
 
 			reader.readTextures(function(target, level, gpuFormat, width, height, blockLength, bytes:Bytes)
 			{
