@@ -1,16 +1,16 @@
 package openfl.display3D.textures;
 
 #if !flash
-import haxe.Timer;
 import haxe.io.Bytes;
-import openfl.display.BitmapData;
-import openfl.display._internal.SamplerState;
-import openfl.display3D._internal.ATFReader;
-import openfl.display3D._internal.KTX1Reader;
-import openfl.events.Event;
-import openfl.utils.ByteArray;
+import haxe.Timer;
 import openfl.utils._internal.ArrayBufferView;
 import openfl.utils._internal.UInt8Array;
+import openfl.display3D._internal.ATFReader;
+import openfl.display3D._internal.KTX1Reader;
+import openfl.display._internal.SamplerState;
+import openfl.display.BitmapData;
+import openfl.events.Event;
+import openfl.utils.ByteArray;
 
 /**
 	The Texture class represents a 2-dimensional texture uploaded to a rendering context.
@@ -299,44 +299,55 @@ import openfl.utils._internal.UInt8Array;
 
 	@:noCompletion private function __uploadCompressedTextureFromByteArray(data:ByteArray, byteArrayOffset:UInt):Void
 	{
-		// KTX1 signature detection
-        var isKTX1 = false;
-        if (data.length >= 12) {
-            var ktx1Sig = [0xAB, 0x4B, 0x54, 0x58, 0x20, 0x31, 0x31, 0xBB, 0x0D, 0x0A, 0x1A, 0x0A];
-            isKTX1 = true;
-            for (i in 0...ktx1Sig.length) {
-                if (data[byteArrayOffset + i] != ktx1Sig[i]) {
-                    isKTX1 = false;
-                    break;
-                }
-            }
-        }
+		// KTX v1 signature detection
+		var isKTX1 = false;
+		if (data.length >= 12)
+		{
+			var ktx1Sig = [0xAB, 0x4B, 0x54, 0x58, 0x20, 0x31, 0x31, 0xBB, 0x0D, 0x0A, 0x1A, 0x0A];
+			isKTX1 = true;
+			for (i in 0...ktx1Sig.length)
+			{
+				if (data[byteArrayOffset + i] != ktx1Sig[i])
+				{
+					isKTX1 = false;
+					break;
+				}
+			}
+		}
 
-		if (isKTX1) {
-			// KTX1 detected, handle it.
-            var reader = new KTX1Reader(data, byteArrayOffset);
-            var context = __context;
-            var gl = context.gl;            
+		if (isKTX1)
+		{
+			// KTX v1 detected, handle it.
+			var reader = new KTX1Reader(data, byteArrayOffset);
+			var context = __context;
+			var gl = context.gl;
 
-            __context.__bindGLTexture2D(__textureID);
+			__context.__bindGLTexture2D(__textureID);
 
-            reader.readTextures(function(target, level, gpuFormat, width, height, blockLength, bytes:Bytes) {
-                gl.compressedTexImage2D(
-                    gl.TEXTURE_2D,
-                    level,
-                    gpuFormat,
-                    width,
-                    height,
-                    0,
-                    new UInt8Array(#if js @:privateAccess bytes.b.buffer #else bytes #end, 0, blockLength)
-                );
-            });
+			var atfGPUFormat = reader.atfGPUFormat;
+			// Only accept if runtime supports KTX's format
+			var runtimeFormat = reader.format == "PVRTC"
+				|| reader.format == "DXT"
+				|| reader.format == "ETC1"
+				|| reader.format == "ETC2" ? (hasAlpha() ? TextureBase.__compressedFormatsAlpha[atfGPUFormat] : TextureBase.__compressedFormats[atfGPUFormat]) : 0;
 
-            __context.__bindGLTexture2D(null);
-            return; // Done, skip ATF
-        }
-        
-        var reader = new ATFReader(data, byteArrayOffset);
+			if (runtimeFormat == null || runtimeFormat == 0)
+			{
+				__context.__bindGLTexture2D(null);
+				throw new IllegalOperationError("KTX internal format not supported by this runtime/context: " + reader.format);
+			}
+
+			reader.readTextures(function(target, level, gpuFormat, width, height, blockLength, bytes:Bytes)
+			{
+				gl.compressedTexImage2D(gl.TEXTURE_2D, level, runtimeFormat, width, height, 0,
+					new UInt8Array(#if js @:privateAccess bytes.b.buffer #else bytes #end, 0, blockLength));
+			});
+
+			__context.__bindGLTexture2D(null);
+			return; // Done, skip ATF
+		}
+
+		var reader = new ATFReader(data, byteArrayOffset);
 		var alpha = reader.readHeader(__width, __height, false);
 
 		var context = __context;

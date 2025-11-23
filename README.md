@@ -17,7 +17,7 @@ This proof of concept implements KTX1 handling for OpenFL and Starling, currentl
 You can run this project on any OpenFL-supported target.  
 **Typical usage:**  
 
-First, install [Haxe](https://haxe.org/).
+First, install [Haxe](https://haxe.org/). Then:
 
 ```bash
 # Install dependencies if needed
