@@ -27,16 +27,17 @@ class KTX1Reader
 	public var glInternalFormat:Int;
 	public var glBaseInternalFormat:Int;
 	public var atfGPUFormat:ATFGPUFormat;
+	public var hasAlpha:Bool;
 
 	private var mipmapData:Array<
-		{
-			level:Int,
-			face:Int,
-			width:Int,
-			height:Int,
-			size:Int,
-			bytes:Bytes
-		}>;
+	{
+		level:Int,
+		face:Int,
+		width:Int,
+		height:Int,
+		size:Int,
+		bytes:Bytes
+	}>;
 
 	public function new(data:ByteArray, byteArrayOffset:UInt = 0)
 	{
@@ -69,17 +70,30 @@ class KTX1Reader
 		mipCount = data.readUnsignedInt();
 		var keyValueDataBytes = data.readUnsignedInt();
 
-		if (depth > 0 || arrayElements > 0) throw new IllegalOperationError("KTX v1 only supports 2D, non-array textures");
+		if (depth > 0 || arrayElements > 0)
+			throw new IllegalOperationError("KTX v1 only supports 2D, non-array textures");
 
-		if (faces != 1 && faces != 6) throw new IllegalOperationError("KTX v1 only supports 2D and cubemap textures (faces must be 1 or 6)");
+		if (faces != 1 && faces != 6)
+			throw new IllegalOperationError("KTX v1 only supports 2D and cubemap textures (faces must be 1 or 6)");
 
 		data.position += keyValueDataBytes;
 
 		atfGPUFormat = ktxGLFormatToATFGPUFormat(glInternalFormat);
-		if (atfGPUFormat == null) throw new IllegalOperationError("OpenFL KTX v1 support: unsupported GL internal format 0x"
-			+ StringTools.hex(glInternalFormat, 4));
+		if (atfGPUFormat == null)
+			throw new IllegalOperationError("OpenFL KTX v1 support: unsupported GL internal format 0x"
+				+ StringTools.hex(glInternalFormat, 4));
+				
+		// Determine alpha support following ATF/Texture conventions
+		hasAlpha = (
+			// DXT5 or ETC2 RGBA, PVRTC2, or other alpha supporting formats
+			atfGPUFormat == ATFGPUFormat.DXT && (glInternalFormat == 0x83F3) // DXT5
+			|| atfGPUFormat == ATFGPUFormat.ETC2 // ETC2 RGBA (Khronos assigns RGBA=0x9278)
+			|| (atfGPUFormat == ATFGPUFormat.PVRTC && glInternalFormat == 0x8C02) // PVRTC RGBA
+			// Expand with more alpha formats as added
+		);
 
-		format = atfGPUFormat.getName(); // For easier debugging
+		// fallback: allow user code to add more heuristics if needed
+
 		// Parse all mipmap levels and faces
 		mipmapData = [];
 		var levelWidth = width;

@@ -1,5 +1,6 @@
 package openfl.display3D.textures;
 
+import openfl.errors.IllegalOperationError;
 #if !flash
 import haxe.io.Bytes;
 import haxe.Timer;
@@ -329,7 +330,7 @@ import openfl.utils.ByteArray;
 			var runtimeFormat = reader.format == "PVRTC"
 				|| reader.format == "DXT"
 				|| reader.format == "ETC1"
-				|| reader.format == "ETC2" ? (hasAlpha() ? TextureBase.__compressedFormatsAlpha[atfGPUFormat] : TextureBase.__compressedFormats[atfGPUFormat]) : 0;
+				|| reader.format == "ETC2" ? (reader.hasAlpha ? TextureBase.__compressedFormatsAlpha[atfGPUFormat] : TextureBase.__compressedFormats[atfGPUFormat]) : 0;
 
 			if (runtimeFormat == null || runtimeFormat == 0)
 			{

@@ -399,7 +399,7 @@ class Texture
         return texture;
     }
 
-    /** Creates a texture from KTX1 data (DXT5 only, proof-of-concept).
+    /** Creates a texture from KTX1 data.
     *  @param ktxData    a Ktx1Data wrapper with parsed metadata and bytes.
     *  @param scale      the scale factor of the created texture. This affects the reported
     *                    width and height of the texture object.
@@ -418,15 +418,19 @@ class Texture
         var context:Context3D = starling.core.Starling.current.context;
         if (context == null) throw new MissingContextError();
 
+        // Use the correct format as returned by Ktx1Data/Reader
         var nativeTexture:openfl.display3D.textures.Texture = context.createTexture(
             ktxData.width, ktxData.height, ktxData.format, false);
 
-        // Use ktxData.hasAlpha for premultipliedAlpha
+        var hasMipmaps = useMipMaps && ktxData.numTextures > 1;
+
+        // Use Ktx1Data.hasAlpha for premultipliedAlpha, following OpenFL convention
         var concreteTexture:ConcreteTexture = new ConcretePotTexture(nativeTexture,
             ktxData.format, ktxData.width, ktxData.height,
-            useMipMaps && ktxData.numTextures > 1,
+            hasMipmaps,
             ktxData.hasAlpha, false, scale);
 
+        // Upload compressed texture. Async supported.
         if (async != null)
             nativeTexture.uploadCompressedTextureFromByteArray(ktxData.data, 0, true);
         else
