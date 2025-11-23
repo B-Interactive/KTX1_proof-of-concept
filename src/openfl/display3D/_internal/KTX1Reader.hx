@@ -5,6 +5,8 @@ import openfl.display3D._internal.ATFGPUFormat;
 import openfl.errors.IllegalOperationError;
 import openfl.utils.ByteArray;
 
+typedef UploadCallback = UInt->Int->ATFGPUFormat->Int->Int->Int->Bytes->Void;
+
 /**
 	This class can read textures from Khronos TeXture v1 format containers.
 	You can create such files via tools such as Compressonator:
@@ -82,7 +84,7 @@ class KTX1Reader
 		if (atfGPUFormat == null)
 			throw new IllegalOperationError("OpenFL KTX v1 support: unsupported GL internal format 0x"
 				+ StringTools.hex(glInternalFormat, 4));
-				
+
 		// Determine alpha support following ATF/Texture conventions
 		hasAlpha = (
 			// DXT5 or ETC2 RGBA, PVRTC2, or other alpha supporting formats
@@ -148,7 +150,7 @@ class KTX1Reader
 	 * Calls uploadCallback for each mip level and face.
 	 * uploadCallback(face, level, atfGPUFormat, width, height, dataLen, Bytes)
 	 */
-	public function readTextures(uploadCallback:UInt->Int->Int->Int->Int->Int->Bytes->Void):Void
+	public function readTextures(uploadCallback:UploadCallback):Void
 	{
 		for (mipmap in mipmapData)
 		{
