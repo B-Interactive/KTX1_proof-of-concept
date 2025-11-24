@@ -41,17 +41,17 @@ class KTX1Reader
 		bytes:Bytes
 	}>;
 
+	/**
+		Creates a KTX1Reader that parses the header and texture data from a KTX v1 ByteArray.
+
+		@param data            The ByteArray containing KTX v1 texture data.
+		@param byteArrayOffset The position in the ByteArray at which KTX data begins.
+
+		@warning The constructor assumes that the caller has already validated the presence of a KTX v1 magic number (signature) at the specified offset. Use KTX1Reader.isKTX1 before constructing a KTX1Reader.
+	**/
 	public function new(data:ByteArray, byteArrayOffset:UInt = 0)
 	{
 		data.position = byteArrayOffset;
-
-		// Check KTX v1 magic number
-		var magic = [0xAB, 0x4B, 0x54, 0x58, 0x20, 0x31, 0x31, 0xBB, 0x0D, 0x0A, 0x1A, 0x0A];
-		for (i in 0...magic.length)
-		{
-			if (data[byteArrayOffset + i] != magic[i]) throw new IllegalOperationError("KTX v1 signature not found");
-		}
-
 		data.endian = openfl.utils.Endian.LITTLE_ENDIAN;
 
 		// Parse header fields
@@ -59,9 +59,15 @@ class KTX1Reader
 		var endianness = data.readUnsignedInt();
 		if (endianness != 0x04030201) throw new IllegalOperationError("KTX v1: Unexpected endianness");
 
-		var glType = data.readUnsignedInt();
+		var glType = data.readUnsignedInt(); // Type of image data.  0 for compressed textures
 		var glTypeSize = data.readUnsignedInt();
-		var glFormat = data.readUnsignedInt();
+		var glFormat = data.readUnsignedInt(); // Pixel format.  0 for compressed textures
+		
+		// Confirm compressed textures are being used (as expected)
+		if (glType != 0 || glTypeSize != 1 || glFormat != 0) {
+			throw new IllegalOperationError("KTX v1 uncompressed textures are not supported");
+		}
+
 		glInternalFormat = data.readUnsignedInt(); // actual GLenum value
 		glBaseInternalFormat = data.readUnsignedInt();
 		width = data.readUnsignedInt();
@@ -80,7 +86,7 @@ class KTX1Reader
 
 		data.position += keyValueDataBytes;
 
-		atfGPUFormat = ktxGLFormatToATFGPUFormat(glInternalFormat);
+		atfGPUFormat = ktxGLFormatToATFGPUFormat(glInternalFormat); // Converts type to corresponding ATFGPUFormat enum
 		if (atfGPUFormat == null)
 			throw new IllegalOperationError("OpenFL KTX v1 support: unsupported GL internal format 0x"
 				+ StringTools.hex(glInternalFormat, 4));

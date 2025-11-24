@@ -299,16 +299,15 @@ import openfl.utils.ByteArray;
 
 	@:noCompletion private function __uploadCompressedTextureFromByteArray(data:ByteArray, byteArrayOffset:UInt):Void
 	{
+		// Detect and handle KTX v1 data.
 		if (KTX1Reader.isKTX1(data, byteArrayOffset))
 		{
-			// KTX v1 detected, handle it.
 			var reader = new KTX1Reader(data, byteArrayOffset);
 			var context = __context;
 			var gl = context.gl;
 
 			__context.__bindGLTexture2D(__textureID);
 
-			// Pull the ATFGPUFormat from reader
 			var gpuFormat = reader.atfGPUFormat;
 
 			// Lookup the compressed format code for this runtime (GL constant)
