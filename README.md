@@ -35,8 +35,9 @@ cd KTX1_proof-of-concept
 openfl test html5
 
 # Run for desktop (Linux, macOS, Windows)
-openfl test neko
+openfl test hl
 openfl test cpp
+openfl test neko
 
 # Run for Flash/AIR (untested)
 openfl test flash
