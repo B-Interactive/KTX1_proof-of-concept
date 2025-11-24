@@ -20,6 +20,8 @@ import openfl.utils.ByteArray;
 **/
 class KTX1Reader
 {
+	public static var KTX1_SIGNATURE = [0xAB, 0x4B, 0x54, 0x58, 0x20, 0x31, 0x31, 0xBB, 0x0D, 0x0A, 0x1A, 0x0A];
+	
 	public var width:Int;
 	public var height:Int;
 	public var mipCount:Int;
@@ -131,7 +133,48 @@ class KTX1Reader
 		}
 	}
 
-	static function ktxGLFormatToATFGPUFormat(glInternal:Int):Null<ATFGPUFormat>
+	/**
+	Iterates over all mipmap levels and faces, calling the specified callback for each one.
+	
+		@param uploadCallback A function called for each mip level and face, with the parameters:
+			@param face        UInt    The face index (0 for 2D textures, 0–5 for cubemaps).
+			@param level       Int     The mipmap level index.
+			@param gpuFormat   ATFGPUFormat The GPU texture format enum value.
+			@param width       Int     The width of this mip level.
+			@param height      Int     The height of this mip level.
+			@param dataLen     Int     The length, in bytes, of the pixel data buffer.
+			@param bytes       Bytes   The pixel data for this mip level and face.
+	**/
+	public function readTextures(uploadCallback:UInt->Int->ATFGPUFormat->Int->Int->Int->Bytes->Void):Void
+	{
+		for (mipmap in mipmapData)
+		{
+			uploadCallback(mipmap.face, mipmap.level, cast atfGPUFormat, // ATFGPUFormat (matches OpenFL expectations)
+				mipmap.width, mipmap.height,
+				mipmap.size, mipmap.bytes);
+		}
+	}
+	
+	/**
+	Checks if the provided ByteArray at the specified offset matches the KTX v1 file signature.
+		@param data   The ByteArray to inspect.
+		@param offset The position in the ByteArray to compare against the KTX v1 signature.
+		@return       True if the signature matches what is expected for KTX v1, otherwise false.
+	**/
+	public static function isKTX1(data:ByteArray, offset:UInt):Bool {
+		if (data.length < KTX1_SIGNATURE.length) return false;
+		for (i in 0...KTX1_SIGNATURE.length) {
+			if (data[offset + i] != KTX1_SIGNATURE[i]) return false;
+		}
+		return true;
+	}
+
+	/**
+	Maps an OpenGL internal format constant from a KTX file to the corresponding ATFGPUFormat enum value.
+		@param glInternal The OpenGL internal format constant (for example, 0x83F0 for DXT1).
+		@return           The matching ATFGPUFormat enum value if supported; otherwise, null.
+	**/
+	public static function ktxGLFormatToATFGPUFormat(glInternal:Int):Null<ATFGPUFormat>
 	{
 		// S3TC
 		if (glInternal == 0x83F0 || glInternal == 0x83F1 || glInternal == 0x83F3) return ATFGPUFormat.DXT;
@@ -142,19 +185,5 @@ class KTX1Reader
 		// ETC2
 		if (glInternal == 0x9274 || glInternal == 0x9278) return ATFGPUFormat.ETC2;
 		return null;
-	}
-
-	/**
-	 * Calls uploadCallback for each mip level and face.
-	 * uploadCallback(face, level, atfGPUFormat, width, height, dataLen, Bytes)
-	 */
-	public function readTextures(uploadCallback:UInt->Int->ATFGPUFormat->Int->Int->Int->Bytes->Void):Void
-	{
-		for (mipmap in mipmapData)
-		{
-			uploadCallback(mipmap.face, mipmap.level, cast atfGPUFormat, // ATFGPUFormat (matches OpenFL expectations)
-				mipmap.width, mipmap.height,
-				mipmap.size, mipmap.bytes);
-		}
 	}
 }

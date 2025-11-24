@@ -1,6 +1,5 @@
 package openfl.display3D.textures;
 
-import openfl.errors.IllegalOperationError;
 #if !flash
 import haxe.io.Bytes;
 import haxe.Timer;
@@ -300,23 +299,7 @@ import openfl.utils.ByteArray;
 
 	@:noCompletion private function __uploadCompressedTextureFromByteArray(data:ByteArray, byteArrayOffset:UInt):Void
 	{
-		// KTX v1 signature detection
-		var isKTX1 = false;
-		if (data.length >= 12)
-		{
-			var ktx1Sig = [0xAB, 0x4B, 0x54, 0x58, 0x20, 0x31, 0x31, 0xBB, 0x0D, 0x0A, 0x1A, 0x0A];
-			isKTX1 = true;
-			for (i in 0...ktx1Sig.length)
-			{
-				if (data[byteArrayOffset + i] != ktx1Sig[i])
-				{
-					isKTX1 = false;
-					break;
-				}
-			}
-		}
-
-		if (isKTX1)
+		if (KTX1Reader.isKTX1(data, byteArrayOffset))
 		{
 			// KTX v1 detected, handle it.
 			var reader = new KTX1Reader(data, byteArrayOffset);
