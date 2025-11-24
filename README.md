@@ -1,14 +1,14 @@
-# KTX1 Proof-of-Concept for OpenFL & Starling
+# KTX v1 Proof-of-Concept for OpenFL & Starling
 
-This repository demonstrates a **proof-of-concept for KTX1 container support for textures** in [OpenFL](https://openfl.org/) and [Starling](https://gamua.com/starling/).
-It is designed to help evaluate how the open-spec KTX1 texture container could be integrated into the OpenFL ecosystem to provide an alternative to the closed-spec ATF container, for accelerated, compressed GPU textures across platforms.
+This repository demonstrates a **proof-of-concept for KTX v1 container support for textures** in [OpenFL](https://openfl.org/) and [Starling](https://gamua.com/starling/).
+It is designed to help evaluate how the open-spec KTX v1 texture container could be integrated into the OpenFL ecosystem to provide an alternative to the closed-spec ATF container, for accelerated, compressed GPU textures across platforms.
 
 ---
 
-## What Is KTX1?
+## What Is KTX v1?
 
-KTX1 is a widely used container format for compressed GPU textures, designed by the Khronos Group.  
-This proof of concept implements KTX1 handling for OpenFL and Starling, currently leveraging only existing ATF-compatible texture compression formats (i.e., only formats already supported by OpenFL and Starling’s ATF pipeline).
+KTX v1 is a widely used container format for compressed GPU textures, designed by the Khronos Group.  
+This proof of concept implements KTX v1 handling for OpenFL and Starling, currently leveraging only existing ATF-compatible texture compression formats (i.e., only formats already supported by OpenFL and Starling’s ATF pipeline).
 
 ---
 
@@ -63,7 +63,7 @@ openfl test air
 
 - **Texture Compression Format Support:**  
   This proof-of-concept only supports the same texture compression formats already enabled for ATF in OpenFL/Starling.
-    - If your platform/GPU does **not** support any of these formats, the corresponding KTX1 textures will not display.
+    - If your platform/GPU does **not** support any of these formats, the corresponding KTX v1 textures will not display.
     - No new texture compression formats or decompression routines have been added... yet.
 
 ---
