@@ -1,5 +1,6 @@
 package;
 
+import starling.utils.Align;
 import openfl.Assets;
 import openfl.Vector;
 import openfl.display.Sprite as OpenFLSprite;
@@ -93,8 +94,11 @@ class StarlingRoot extends Sprite {
 			addChild(sprite);
 
 			var movieClip:MovieClip = new MovieClip(assetManager.getTextures(animations[i]));
+			movieClip.alignPivot(Align.CENTER, Align.CENTER);
+			movieClip.x += (movieClip.width * 0.5);
+			movieClip.y += (movieClip.height * 0.5);
 			sprite.addChild(movieClip);
-			trace(animations[i] + " mipmaps : " + movieClip.texture.mipMapping);
+			//Starling.current.juggler.tween(movieClip, 5, { scale: 0.25, repeatCount: 0, reverse: true });
 			Starling.current.juggler.add(movieClip);
 
 			// Text with format/codec details

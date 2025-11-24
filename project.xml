@@ -6,7 +6,7 @@
     <!-- output -->
     <app main="Main" file="ktx1loader" path="bin" />
     
-    <window background="#000000" fps="60" />
+    <window background="#888888" fps="60" />
     <window width="3000" height="1920" unless="mobile" />
     <window orientation="landscape" vsync="false" antialiasing="0" if="cpp" />
     <window resizable="true" />
