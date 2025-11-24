@@ -86,7 +86,7 @@ class KTX1Reader
 
 		data.position += keyValueDataBytes;
 
-		atfGPUFormat = ktxGLFormatToATFGPUFormat(glInternalFormat); // Converts type to corresponding ATFGPUFormat enum
+		atfGPUFormat = ktxGLFormatToATFGPUFormat(glInternalFormat); // Converts to corresponding ATFGPUFormat
 		if (atfGPUFormat == null)
 			throw new IllegalOperationError("OpenFL KTX v1 support: unsupported GL internal format 0x"
 				+ StringTools.hex(glInternalFormat, 4));
@@ -96,11 +96,8 @@ class KTX1Reader
 			// DXT5 or ETC2 RGBA, PVRTC2, or other alpha supporting formats
 			atfGPUFormat == ATFGPUFormat.DXT && (glInternalFormat == 0x83F3) // DXT5
 			|| atfGPUFormat == ATFGPUFormat.ETC2 // ETC2 RGBA (Khronos assigns RGBA=0x9278)
-			|| (atfGPUFormat == ATFGPUFormat.PVRTC && glInternalFormat == 0x8C02) // PVRTC RGBA
-			// Expand with more alpha formats as added
-		);
-
-		// fallback: allow user code to add more heuristics if needed
+			|| (atfGPUFormat == ATFGPUFormat.PVRTC && glInternalFormat == 0x8C02) // PVRTC RGBA			
+		);		
 
 		// Parse all mipmap levels and faces
 		mipmapData = [];
