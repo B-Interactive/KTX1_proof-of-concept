@@ -49,7 +49,7 @@ openfl test air
 
 - On launch, you should see a selection of simple cat animations.
 - Each animation represents a different container + texture compression format.
-- The three container types are ATF (classic), XTC1 (new) and PNG (reference).
+- The three container types are ATF (classic), KTX v1 (new) and PNG (reference).
 - The texture compression formats are DXT1/5, ETC1,2 and PVRTC.
 - **Not all cat animations will be visible**  
   This is expected: most platforms do **not** support all GL extensions or compressed formats simultaneously.
