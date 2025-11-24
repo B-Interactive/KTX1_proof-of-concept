@@ -57,7 +57,7 @@ class KTX1Reader
 		// Parse header fields
 		data.position = byteArrayOffset + 12;
 		var endianness = data.readUnsignedInt();
-		if (endianness != 0x04030201) throw new IllegalOperationError("KTX v1: Unexpected endianness");
+		if (endianness != 0x04030201) throw new IllegalOperationError("KTX v1 unexpected endianness");
 
 		var glType = data.readUnsignedInt(); // Type of image data.  0 for compressed textures
 		var glTypeSize = data.readUnsignedInt();
@@ -111,10 +111,10 @@ class KTX1Reader
 			for (face in 0...faces)
 			{
 				// Each mip+face starts with imageSize, then image data, then 4-byte alignment
-				if (data.position + 4 > data.length) throw new IllegalOperationError('KTX v1: Unexpected EOF reading mipmap imageSize');
+				if (data.position + 4 > data.length) throw new IllegalOperationError('KTX v1 unexpected EOF reading mipmap imageSize');
 				var imageSize = data.readUnsignedInt();
 
-				if (data.position + imageSize > data.length) throw new IllegalOperationError('KTX v1: Unexpected EOF reading mipmap imageData');
+				if (data.position + imageSize > data.length) throw new IllegalOperationError('KTX v1 unexpected EOF reading mipmap imageData');
 
 				var imageBytes = Bytes.alloc(imageSize);
 				data.readBytes(imageBytes, 0, imageSize);
